@@ -238,31 +238,30 @@ EOF
 		ldconfig
 		if [ $ipaddr = "false" ]; then
 			einfo "Bring up DHCP..."
-			udhcpc
+			run udhcpc
 		else
        			einfo "Try getting IPaddress (${ipaddr})."
-        		ifconfig $nic $ipaddr up >/dev/null 2>&1
+        		run ifconfig $nic $ipaddr up >/dev/null 2>&1
 		fi
-		if [ "$?" -eq 0 ]; then # NIC get IPaddr
-       			einfo "NIC get IPaddress (${ipaddr})."
-            		if [ -x /bin/dropbear ]; then
-				touch /var/log/lastlog
-                		chmod 600 /etc/shadow
-                		touch /etc/resolv.conf
-				for f in /bin/dbclient /bin/dbscp; do
-					test -x $f && ln -sf $f /usr/bin
-				done
-                		run hostname mybox
+       		einfo "NIC get IPaddress (${ipaddr})."
+            	if [ -x /bin/dropbear ]; then
+			touch /var/log/lastlog
+                	chmod 600 /etc/shadow
+                	touch /etc/resolv.conf
+			for f in /bin/dbclient /bin/dbscp; do
+				test -x $f && ln -sf $f /usr/bin
+			done
+                	run hostname mybox
+			
+			einfo "Initiating /dev/pts (devtpts)."
+			[ -d /dev/pts ] || mkdir -p /dev/pts
+			if ! mount -t devpts /dev/pts /dev/pts 2>/dev/null; then
+				rm -fr /dev/pts
+			fi
 
-				einfo "Initiating /dev/pts (devtpts)."
-				[ -d /dev/pts ] || mkdir -p /dev/pts
-				if ! mount -t devpts /dev/pts /dev/pts 2>/dev/null; then
-					rm -fr /dev/pts
-				fi
-
-				# make banner
-                		[ ! -e /etc/dropbear/ ] && mkdir -p /etc/dropbear
-				cat > /etc/dropbear/banner <<EOF
+			# make banner
+                	[ ! -e /etc/dropbear/ ] && mkdir -p /etc/dropbear
+			cat > /etc/dropbear/banner <<EOF
 
 ------------------------------------------------------------
 	better-iinitramfs v${ver}
@@ -271,20 +270,19 @@ EOF
 ------------------------------------------------------------
 
 EOF
-				# make hostkey
-				[ ! -e /etc/dropbear/dropbear_dss_host_key ] && (
-					einfo "Generating DSS-Hostkey..."
-				    	dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
-				)
-				[ ! -e /etc/dropbear/dropbear_rsa_host_key ] && (
-                    			einfo "Generating RSA-Hostkey..."
-                    			dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
-                		)
+			# make hostkey
+			[ ! -e /etc/dropbear/dropbear_dss_host_key ] && (
+				einfo "Generating DSS-Hostkey..."
+				dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
+			)
+			[ ! -e /etc/dropbear/dropbear_rsa_host_key ] && (
+                    		einfo "Generating RSA-Hostkey..."
+                    		dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
+                	)
 
-                		einfo "Starting dropbear"
-                		dropbear -b /etc/dropbear/banner -F 2>&1 | tee /var/run/dropbear.log > /dev/tty10 &
-            		fi # -x /bin/dropbear
-        	fi # ifconfig 
+                	einfo "Starting dropbear"
+                	dropbear -b /etc/dropbear/banner -F 2>&1 | tee /var/run/dropbear.log > /dev/tty10 &
+            	fi # -x /bin/dropbear
 	fi
 	
 	droptoshell
