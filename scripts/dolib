@@ -29,8 +29,3 @@ if [[ -f $source ]]; then
 else 
 	ewarn "Missing library: $source, skipping."
 fi
-
-#-- vim: tabstop=8
-
-
-

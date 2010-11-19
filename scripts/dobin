@@ -39,5 +39,3 @@ if [[ -f $source ]]; then
 else 
 	ewarn "Missing binary: $source, skipping."
 fi
-
-#-- vim: tabstop=8

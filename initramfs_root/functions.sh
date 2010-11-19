@@ -37,5 +37,3 @@ dodir() {
 		[ -d $dir ] || mkdir -p $dir
 	done
 }
-
-#-- vim: tabstop=8
