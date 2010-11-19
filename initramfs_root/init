@@ -27,6 +27,8 @@ clear
 # Default values.
 luks=false
 lvm=false
+dodropbear=false
+aufs=false
 rescueshell=false
 nic="eth0"
 ipaddr=false
@@ -82,6 +84,12 @@ for i in $(cat /proc/cmdline); do
 		;;
 		lvm)
 			lvm=true
+		;;
+		dodropbear)
+			dodropbear=true
+		;;
+		aufs)
+			aufs=true
 		;;
 		rescueshell)
 			rescueshell=true
@@ -223,13 +231,20 @@ fi
 
 if [ $rescueshell = "true" ]; then
 	# XXX: dropbear-ssh
-	cat > /etc/ld.so.conf <<EOF
+	if [ ${dodropbear} = "true" ]; then
+		cat > /etc/ld.so.conf <<EOF
 /lib
 EOF
-	ldconfig
-	if [ $ipaddr != "false" ]; then
-       		einfo "try getting IPaddress (${ipaddr})."
-        	if ifconfig $nic $ipaddr up >/dev/null 2>&1; then
+		ldconfig
+		if [ $ipaddr = "false" ]; then
+			einfo "Bring up DHCP..."
+			udhcpc
+		else
+       			einfo "Try getting IPaddress (${ipaddr})."
+        		ifconfig $nic $ipaddr up >/dev/null 2>&1
+		fi
+		if [ "$?" -eq 0 ]; then # NIC get IPaddr
+       			einfo "NIC get IPaddress (${ipaddr})."
             		if [ -x /bin/dropbear ]; then
 				touch /var/log/lastlog
                 		chmod 600 /etc/shadow
@@ -270,8 +285,8 @@ EOF
                 		dropbear -b /etc/dropbear/banner -F 2>&1 | tee /var/run/dropbear.log > /dev/tty10 &
             		fi # -x /bin/dropbear
         	fi # ifconfig 
-        fi # ipaddr setting check
-
+	fi
+	
 	droptoshell
 
 	if [ -e /var/run/dropbear.pid ]; then

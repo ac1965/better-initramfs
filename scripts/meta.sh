@@ -24,6 +24,7 @@ bin() {
         $sudo $workdir/dobin /usr/bin/dropbearkey
         $sudo $workdir/dobin /usr/bin/dbclient
         $sudo $workdir/dobin /usr/bin/dbscp
+        $sudo $workdir/dobin /sbin/blkid
 }
 
 etc() {
