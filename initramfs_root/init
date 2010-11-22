@@ -147,10 +147,7 @@ if [ -z $root ]; then
 	eerror "\$root variable is empty. This is fatal."
 fi
 
-if [ $lvm = "true" ]; then
-	einfo "Getting LVM volumes up (if any)."
-	run lvm vgscan && run lvm vgchange -a y
-fi
+if [ $lvm = "true" ]; then run dolvm; fi
 
 if [ $luks = "true" ]; then
 	if [ -z $enc_root ]; then
@@ -219,10 +216,7 @@ if [ $luks = "true" ]; then
         		einfo "Unmounting $mntkey"
         		umount -n $mntkey
 		fi
-		if [ $lvm = "true" ]; then
-			einfo "Again, getting LVM volumes up (if any, after map dmcrypt)."
-			run lvm vgscan && run lvm vgchange -a y
-		fi
+		if [ $lvm = "true" ]; then dolvm; fi
 	else
 		error "device (${enc_root}) is not LUKS."
 		droptoshell
