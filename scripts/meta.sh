@@ -18,13 +18,14 @@ bin() {
 		( cd $initramfs_root/bin && if [ ! -h sh ]; then $sudo ln -s busybox sh; fi && if [ ! -h bb ]; then $sudo ln -s busybox bb; fi)
 	$sudo $workdir/dobin /sbin/cryptsetup
 	$sudo $workdir/dobin /sbin/lvm.static lvm
-	$sudo $workdir/dobin /usr/bin/strace
-	$sudo $workdir/dobin /sbin/ldconfig
         $sudo $workdir/dobin /usr/sbin/dropbear
         $sudo $workdir/dobin /usr/bin/dropbearkey
         $sudo $workdir/dobin /usr/bin/dbclient
         $sudo $workdir/dobin /usr/bin/dbscp
-        $sudo $workdir/dobin /sbin/blkid
+	$sudo $workdir/dobin /sbin/ldconfig
+        $sudo $workdir/dobin /usr/bin/ldd
+	$sudo $workdir/dobin /usr/bin/strace
+	$sudo $workdir/dobin /sbin/blkid
 }
 
 etc() {
@@ -66,19 +67,10 @@ clean() {
 }
 
 case $1 in
-	bin)
-		bin
-	;;
-	etc)
-		etc
-	;;
-	image)
-		image
+	bin|etc|image|clean)
+		$1
 	;;
 	all)
 		bin && etc && lib && image
-	;;
-	clean)
-		clean
 	;;
 esac
