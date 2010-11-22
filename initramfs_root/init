@@ -28,6 +28,7 @@ clear
 luks=false
 lvm=false
 dodropbear=false
+dropbearip=false
 aufs=false
 rescueshell=false
 nic="eth0"
@@ -88,6 +89,10 @@ for i in $(cat /proc/cmdline); do
 		dodropbear)
 			dodropbear=true
 		;;
+		dodropbear\=*)
+			dodropbear=true
+			dropbearip=$(get_opt $i)
+		;;
 		aufs)
 			aufs=true
 		;;
@@ -96,9 +101,6 @@ for i in $(cat /proc/cmdline); do
 		;;
         	nic\=*)
             		nic=$(get_opt $i)
-        	;;
-        	ipaddr\=*)
-            		ipaddr=$(get_opt $i)
         	;;
 		tuxonice)
 			tuxonice=true
@@ -230,32 +232,34 @@ if [ $rescueshell = "true" ]; then
 /lib
 EOF
 		ldconfig
-		if [ $ipaddr = "false" ]; then
+		if [ $dropbearip = "false" ]; then
 			einfo "Bring up DHCP..."
 			run udhcpc
 		else
-       			einfo "Try getting IPaddress (${ipaddr})."
-        		run ifconfig $nic $ipaddr up >/dev/null 2>&1
+       			einfo "Try getting IPaddress (${dropbearip})."
+        		run ifconfig $nic $dropbearip up >/dev/null 2>&1
 		fi
-       		einfo "NIC get IPaddress (${ipaddr})."
-            	if [ -x /bin/dropbear ]; then
-			touch /var/log/lastlog
-                	chmod 600 /etc/shadow
-                	touch /etc/resolv.conf
-			for f in /bin/dbclient /bin/dbscp; do
-				test -x $f && ln -sf $f /usr/bin
-			done
-                	run hostname mybox
-			
-			einfo "Initiating /dev/pts (devtpts)."
-			[ -d /dev/pts ] || mkdir -p /dev/pts
-			if ! mount -t devpts /dev/pts /dev/pts 2>/dev/null; then
-				rm -fr /dev/pts
-			fi
+		getip=$(ip a | grep $nic | grep inet | sed 's/  //g' | cut -d' ' -f 2)
+		if [ -n ${getip} ]; then
+			einfo "NIC get IPaddress (${getip})."
+            		if [ -x /bin/dropbear ]; then
+				touch /var/log/lastlog
+                		chmod 600 /etc/shadow
+                		touch /etc/resolv.conf
+				for f in /bin/dbclient /bin/dbscp; do
+					test -x $f && ln -sf $f /usr/bin
+				done
+                		run hostname mybox
+				
+				einfo "Initiating /dev/pts (devtpts)."
+				[ -d /dev/pts ] || mkdir -p /dev/pts
+				if ! mount -t devpts /dev/pts /dev/pts 2>/dev/null; then
+					rm -fr /dev/pts
+				fi
 
-			# make banner
-                	[ ! -e /etc/dropbear/ ] && mkdir -p /etc/dropbear
-			cat > /etc/dropbear/banner <<EOF
+			        # make banner
+                		[ ! -e /etc/dropbear/ ] && mkdir -p /etc/dropbear
+				cat > /etc/dropbear/banner <<EOF
 
 ------------------------------------------------------------
 	better-iinitramfs v${ver}
@@ -264,19 +268,20 @@ EOF
 ------------------------------------------------------------
 
 EOF
-			# make hostkey
-			[ ! -e /etc/dropbear/dropbear_dss_host_key ] && (
-				einfo "Generating DSS-Hostkey..."
-				dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
-			)
-			[ ! -e /etc/dropbear/dropbear_rsa_host_key ] && (
-                    		einfo "Generating RSA-Hostkey..."
-                    		dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
-                	)
+			        # make hostkey
+				[ ! -e /etc/dropbear/dropbear_dss_host_key ] && (
+					einfo "Generating DSS-Hostkey..."
+					dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
+				)
+				[ ! -e /etc/dropbear/dropbear_rsa_host_key ] && (
+                    			einfo "Generating RSA-Hostkey..."
+                    			dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
+                		)
 
-                	einfo "Starting dropbear"
-                	dropbear -b /etc/dropbear/banner -F 2>&1 | tee /var/run/dropbear.log > /dev/tty10 &
-            	fi # -x /bin/dropbear
+                		einfo "Starting dropbear"
+                		dropbear -b /etc/dropbear/banner -F 2>&1 | tee /var/run/dropbear.log > /dev/tty10 &
+            		fi # -x /bin/dropbear
+		fi
 	fi
 	
 	droptoshell
