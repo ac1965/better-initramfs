@@ -5,7 +5,10 @@ set -e
 workdir="$(readlink -f $(dirname $0))"
 . $workdir/core.sh || exit 1
 
-ewarn "New better-initramfs is not backward compatible, read ChangeLog file.\n"
+ver="$(cat $workdir/../VERSION)"
+
+einfo "better-initramfs v${ver} - home page: http://slashbeast.github.com/better-initramfs/"
+ewarn "Remember to check ChangeLog file after every update.\n"
 
 bin() {
 	[ -d ${initramfs_root}/bin ] && \
