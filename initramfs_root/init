@@ -152,17 +152,16 @@ fi
 if [ $lvm = "true" ]; then run dolvm; fi
 
 if [ $luks = "true" ]; then
+	if [ ! -f /bin/cryptsetup ]; then
+		eerror "There is no cryptsetup binary into initramfs image."
+		droptoshell
+	fi
+
 	if [ -z $enc_root ]; then
 		eerror "You have enabled luks but your \$enc_root variable is empty."
 		droptoshell
 	fi
 	
-	# cryptsetup not found.
-	if [ ! -e /bin/cryptsetup ]; then
-        	eerror "The ramdisk does not support LUKS."
-        	dropshell
-    	fi
-
 	einfo "Opening encrypted partition and mapping to /dev/mapper/enc_root."
 	# Resolve possible UUID or LABEL of enc_root now, after getting lvm up.
 	enc_root="$(get_device $enc_root)"
