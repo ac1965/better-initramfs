@@ -29,6 +29,7 @@ bin() {
         $sudo $workdir/dobin /usr/bin/ldd
 	$sudo $workdir/dobin /usr/bin/strace
 	$sudo $workdir/dobin /sbin/blkid
+	$sudo $workdir/dobin /usr/bin/screen
 }
 
 etc() {

@@ -17,7 +17,7 @@ fi
 
 addlib() {
         test -d ${initramfs_root}/lib || mkdir -p ${initramfs_root}/lib
-	test -e ${initramfs_root}/lib/`basename ${source}` || (
+	test -e ${initramfs_root}/lib/$(basename ${source}) || (
 	     einfo "Adding dynamic library : $source..."
 	     $sudo cp -lp $source ${initramfs_root}/lib
 	)

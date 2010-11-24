@@ -28,7 +28,7 @@ addbin() {
 				ewarn "Adding library file: $lib"
 				test -h $lib && (
 					$sudo cp -p $(readlink -f $lib) ${initramfs_root}/lib;
-					$sudo ln -s ${initramfs_root}/lib/$(readlink $lib) ${initramfs_root}/lib/$(basename $lib)
+					$sudo ln -s $(readlink $lib) ${initramfs_root}/lib/$(basename $lib)
 				) || $sudo cp -p $lib ${initramfs_root}/lib
 			)
 		done
