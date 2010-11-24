@@ -51,6 +51,7 @@ etc() {
 	$sudo chown root:root ${initramfs_root}/etc/passwd
 	$sudo chown root:root ${initramfs_root}/etc/shadow
 	$sudo chmod 0600 ${initramfs_root}/etc/shadow
+        test -f $workdir/defaults/terminfo.tar.gz && $sudo tar xf $workdir/defaults/terminfo.tar.gz -C $initramfs_root
 }
 
 lib() {
@@ -58,6 +59,8 @@ lib() {
         for l in `ls /lib/libnss_* /lib/libpam.* /lib/libpam_*`; do
 	    $sudo $workdir/dolib $l
         done
+        test -d $initramfs_root/lib/keymaps || mkdir -p $initramfs_root/lib/keymaps
+        test -f $workdir/defaults/keymaps.tar.gz && $sudo tar xf $workdir/defaults/keymaps.tar.gz -C $initramfs_root/lib/keymaps
 }
 
 image() {

@@ -25,7 +25,7 @@ addbin() {
 		for lib in $dynamic_libs; do
 			test -d ${initramfs_root}/lib || mkdir -p ${initramfs_root}/lib
 			test -e ${initramfs_root}/lib/$(basename $lib) || (
-				ewarn "Adding library file: $lib"
+				einfo "Adding dynamic library: $lib"
 				test -h $lib && (
 					$sudo cp -p $(readlink -f $lib) ${initramfs_root}/lib;
 					$sudo ln -s $(readlink $lib) ${initramfs_root}/lib/$(basename $lib)

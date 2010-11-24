@@ -227,6 +227,16 @@ if [ $luks = "true" ]; then
 fi
 
 if [ $rescueshell = "true" ]; then
+	touch /var/log/lastlog
+	touch /var/run/utmp
+	chmod 600 /etc/shadow
+	touch /etc/resolv.conf
+	einfo "Initiating /dev/pts (devtpts)."
+	[ -d /dev/pts ] || mkdir -p /dev/pts
+	if ! mount -t devpts /dev/pts /dev/pts 2>/dev/null; then
+		rm -fr /dev/pts
+	fi
+
 	# XXX: dropbear-ssh
 	if [ ${dodropbear} = "true" ]; then
 		if [ $dropbearip = "false" ]; then
@@ -240,20 +250,11 @@ if [ $rescueshell = "true" ]; then
 		if [ -n ${getip} ]; then
 			einfo "NIC get IPaddress (${getip})."
             		if [ -x /bin/dropbear ]; then
-				touch /var/log/lastlog
-                		chmod 600 /etc/shadow
-                		touch /etc/resolv.conf
 				for f in /bin/dbclient /bin/dbscp; do
 					test -x $f && ln -sf $f /usr/bin
 				done
                 		run hostname mybox
 				
-				einfo "Initiating /dev/pts (devtpts)."
-				[ -d /dev/pts ] || mkdir -p /dev/pts
-				if ! mount -t devpts /dev/pts /dev/pts 2>/dev/null; then
-					rm -fr /dev/pts
-				fi
-
 			        # make banner
                 		[ ! -e /etc/dropbear/ ] && mkdir -p /etc/dropbear
 				cat > /etc/dropbear/banner <<EOF
@@ -283,13 +284,13 @@ EOF
 	
 	droptoshell
 
-	if [ -e /var/run/dropbear.pid ]; then
-    		kill "$(cat /var/run/dropbear.pid)"
-		if [ -d /dev/pts ]; then
-			einfo "Unmount /dev/pts"
-			umount /dev/pts
-		fi
+	[ -e /var/run/dropbear.pid ] && kill "$(cat /var/run/dropbear.pid)"
+
+	if [ -d /dev/pts ]; then
+		einfo "Unmount /dev/pts"
+		umount /dev/pts
 	fi
+	pkill screen
 fi
 
 if [ $tuxonice = "true" ]; then
