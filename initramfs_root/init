@@ -149,6 +149,8 @@ if [ -z $root ]; then
 	eerror "\$root variable is empty. This is fatal."
 fi
 
+run bootstrap_dynamic_libs
+
 if [ $lvm = "true" ]; then run dolvm; fi
 
 if [ $luks = "true" ]; then
@@ -175,7 +177,7 @@ if [ $luks = "true" ]; then
 	run chmod 755 /sbin/udevadm
 
 	# LUKS device check
-	if cryptsetup isLuks $enc_root > /dev/null 2>&1; then
+	if run cryptsetup isLuks $enc_root > /dev/null 2>&1; then
 		enc_root_keydev="$(get_device $enc_root_keydev)"
 		if [ ${enc_root_keydev} != "false" ] && [ ${enc_root_keyfile} != "false" ]; then
             		if [ -b $enc_root_keydev ]; then
@@ -227,10 +229,6 @@ fi
 if [ $rescueshell = "true" ]; then
 	# XXX: dropbear-ssh
 	if [ ${dodropbear} = "true" ]; then
-		cat > /etc/ld.so.conf <<EOF
-/lib
-EOF
-		ldconfig
 		if [ $dropbearip = "false" ]; then
 			einfo "Bring up DHCP..."
 			run udhcpc

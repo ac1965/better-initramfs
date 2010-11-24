@@ -16,18 +16,20 @@ else
 fi
 
 addbin() {
-	dynamic_libs=`ldd $source | awk '{if (NF==4) print $3; if (NF==2) print $1}'`
 	einfo "Adding $source..."
 	if ! ldd $source >> /dev/null; then
 		$sudo cp -p $source $target # static link file
 	else
 		$sudo cp -p $source $target # dynamic link file, copy dynamic library
+		dynamic_libs=$(ldd $source | awk '{if (NF==4) print $3; if (NF==2) print $1}')
 		for lib in $dynamic_libs; do
 			test -d ${initramfs_root}/lib || mkdir -p ${initramfs_root}/lib
-			test -e ${initramfs_root}/lib/`basename ${lib}` || (
-				einfo "Adding dynamic library : $lib..."
-				$sudo cp -lp $lib ${initramfs_root}/lib
-				test -h $lib && $sudo cp -p $(readlink -f $lib) ${initramfs_root}/lib
+			test -e ${initramfs_root}/lib/$(basename $lib) || (
+				ewarn "Adding library file: $lib"
+				test -h $lib && (
+					$sudo cp -p $(readlink -f $lib) ${initramfs_root}/lib;
+					$sudo ln -s ${initramfs_root}/lib/$(readlink $lib) ${initramfs_root}/lib/$(basename $lib)
+				) || $sudo cp -p $lib ${initramfs_root}/lib
 			)
 		done
 	fi

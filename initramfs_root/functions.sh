@@ -50,3 +50,10 @@ dolvm() {
 	einfo "Scaning all disks for volume groups."
 	lvm vgscan && lvm vgchange -a y
 }
+
+bootstrap_dynamic_libs() {
+		cat > /etc/ld.so.conf <<EOF
+/lib
+EOF
+		ldconfig
+}
