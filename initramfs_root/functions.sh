@@ -52,8 +52,8 @@ dolvm() {
 }
 
 bootstrap_dynamic_libs() {
-		cat > /etc/ld.so.conf <<EOF
+	cat > /etc/ld.so.conf <<EOF
 /lib
 EOF
-		ldconfig
+	ldconfig
 }
