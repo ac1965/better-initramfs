@@ -85,9 +85,6 @@ for i in $(cat /proc/cmdline); do
 		rescueshell)
 			rescueshell=true
 		;;
-		keymap)
-			keymap=true
-		;;
 		keymap\=*)
 			keymap=$(get_opt $i)
 		;;
