@@ -30,7 +30,7 @@ clear
 cryptsetup_options=""
 mntkey="/mnt/key"
 
-## Config.
+# Config.
 if [ -f /config ]; then . /config; fi
 
 # Basic
@@ -83,6 +83,9 @@ for i in $(cat /proc/cmdline); do
 		aufs)
 			aufs=true
 		;;
+		softraid)
+			softraid=true
+ 		;;
 		rescueshell)
 			rescueshell=true
 		;;
@@ -123,6 +126,8 @@ fi
 
 run bootstrap_dynamic_libs
 
+# prepare /dev
+mountdev
 # mdadm hook.
 use softraid && initmdadm
 # lvm hook.
@@ -135,7 +140,6 @@ use rescueshell && droptoshell
 use tuxonice && dotuxonice
 
 # Mount rootfs to /newroot.
-mountroot
 
 einfo "Unmounting /sys and /proc."
 run umount /sys /proc
