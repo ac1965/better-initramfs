@@ -106,7 +106,6 @@ for i in $(cat /proc/cmdline); do
 		;;
 	esac
 done
-####
 
 
 if [ -z $init ]; then init="/sbin/init"; fi
@@ -140,10 +139,10 @@ use rescueshell && droptoshell
 use tuxonice && dotuxonice
 
 # Mount rootfs to /newroot.
+mountroot
 
 einfo "Unmounting /sys and /proc."
 run umount /sys /proc
-
 if [ "$mdev_fallback" != "true" ]; then
 	einfo "Unmounting /dev."
 	run umount /dev
