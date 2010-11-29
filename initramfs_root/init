@@ -12,6 +12,8 @@
 
 # Prepare dirs
 run dodir /dev /newroot /sbin /proc /sys /etc /usr/bin /var/log /var/run
+[ -d /lib ] && run ln -s /lib /lib64
+[ -d /usr/lib ] && run ln -s /usr/lib /usr/lib64
 
 # Basic /dev content, we need it as fast as possible.
 [ ! -e /dev/console ]	&& run mknod /dev/console c 5 1
@@ -25,26 +27,11 @@ run dodir /dev /newroot /sbin /proc /sys /etc /usr/bin /var/log /var/run
 clear
 
 # Default values.
-luks=false
-lvm=false
-dodropbear=false
-dropbearip=false
-aufs=false
-rescueshell=false
-nic="eth0"
-ipaddr=false
-tuxonice=false
-mdev_fallback=false
-rootdelay=false
-enc_root_keydev=false
-enc_root_keyfile=false
 cryptsetup_options=""
 mntkey="/mnt/key"
 
 ## Config.
-if [ -f /config ]; then
-        . /config
-fi
+if [ -f /config ]; then . /config; fi
 
 # Basic
 kernelver="$(uname -r)"
@@ -118,10 +105,14 @@ for i in $(cat /proc/cmdline); do
 done
 ####
 
+
+if [ -z $init ]; then init="/sbin/init"; fi
+if [ -z $root ]; then eerror "\$root variable is empty. This is fatal."; fi
+
 einfo "Create all the symlinks to /bin/busybox."
 run busybox --install -s
 
-if [ $rootdelay != "false" ]; then
+if [ -n "$rootdelay" ]; then
 	if [ $rootdelay -gt 0 2>/dev/null ]; then
 		einfo "Waiting $(get_opt $rootdelay)s (rootdelay)"
 		run sleep $(get_opt $rootdelay)
@@ -130,209 +121,29 @@ if [ $rootdelay != "false" ]; then
 	fi
 fi
 
-einfo "Initiating /dev (devtmpfs)."
-if ! mount -t devtmpfs devtmpfs /dev 2>/dev/null; then
-	ewarn "Unable to mount devtmpfs, missing CONFIG_DEVTMPFS? Switching to busybox's mdev."
-	mdev_fallback="true"
-
-	einfo "Initiating /dev (mdev)."
-	touch /etc/mdev.conf # Do we really need this empty file?
-	run echo /sbin/mdev > /proc/sys/kernel/hotplug
-	run mdev -s
-fi
-
-if [ -z $init ]; then
-	init="/sbin/init"
-fi
-
-if [ -z $root ]; then
-	eerror "\$root variable is empty. This is fatal."
-fi
-
 run bootstrap_dynamic_libs
 
-if [ $lvm = "true" ]; then run dolvm; fi
+# mdadm hook.
+use softraid && initmdadm
+# lvm hook.
+use lvm && initlvm
+# dmcrypt luks + lvm, if enabled.
+use luks && initluks && use lvm && initlvm
+# Drop to rescue shell.
+use rescueshell && droptoshell
+# Resume from TuxOnIce hibernation.
+use tuxonice && dotuxonice
 
-if [ $luks = "true" ]; then
-	if [ ! -f /bin/cryptsetup ]; then
-		eerror "There is no cryptsetup binary into initramfs image."
-		droptoshell
-	fi
+# Mount rootfs to /newroot.
+mountroot
 
-	if [ -z $enc_root ]; then
-		eerror "You have enabled luks but your \$enc_root variable is empty."
-		droptoshell
-	fi
-	
-	einfo "Opening encrypted partition and mapping to /dev/mapper/enc_root."
-	# Resolve possible UUID or LABEL of enc_root now, after getting lvm up.
-	enc_root="$(get_device $enc_root)"
-	if [ -z $enc_root ]; then
-        	eerror "\$enc_root variable is empty. Wrong UUID/LABEL?"
-	        droptoshell
-	fi
-
-	# Hack for cryptsetup which trying to run /sbin/udevadm.
-	run echo -e "#!/bin/sh\nexit 0" > /sbin/udevadm
-	run chmod 755 /sbin/udevadm
-
-	# LUKS device check
-	if run cryptsetup isLuks $enc_root > /dev/null 2>&1; then
-		enc_root_keydev="$(get_device $enc_root_keydev)"
-		if [ ${enc_root_keydev} != "false" ] && [ ${enc_root_keyfile} != "false" ]; then
-            		if [ -b $enc_root_keydev ]; then
-                		einfo "Using key device=$enc_root_keydev and keyfile=$enc_root_keyfile"
-            		else
-                		count=30 # wait 30sec
-                		ewarn "Please insert removable device ${enc_root_keydev} during the ${count} seconds."
-                		while [ ${count} -gt 0 ]; do
-                    			count=$((count-1))
-					sleep 1
-                    			if [ -b $enc_root_keydev ]; then
-                        			einfo "device (${enc_root_keydev}) detected."
-						break
-                    			fi
-                		done
-				if [ $count -eq 0 ]; then
-					eerror "device (${enc_root_keydev}) not found."
-					droptoshell
-				fi
-            		fi
-                	[ -d $mntkey ] || mkdir -p $mntkey
-                	if mount -n -t auto -o ro $enc_root_keydev $mntkey >/dev/null 2>&1; then
-                    		if [ -e "${mntkey}${enc_root_keyfile}" ]; then
-                        		cryptsetup_options="-d ${mntkey}${enc_root_keyfile}"
-                    		else
-                        		ewarn "keyfile (${enc_root_keyfile}) not found, umount ${mntkey}"
-                        		umount -n $mntkey
-                    		fi
-                	fi
-		elif [ ${enc_root_keydev} = "false" ] && [ ${enc_root_keyfile} != "false" ]; then
-			ewarn "enc_root_keydev= variable is empty, skipping (enc_root_keyfile=${enc_root_keyfile})"
-		elif [ ${enc_root_keydev} != "false" ] && [ ${enc_root_keyfile} = "false" ]; then
-            		ewarn "enc_root_keyfile= variable is empty, skipping (enc_root_keydev=${enc_root_keydev})"
-        	fi
-
-		run cryptsetup $cryptsetup_options luksOpen $enc_root enc_root
-
-		if [ x"${cryptsetup_options}" != x"" ]; then
-        		einfo "Unmounting $mntkey"
-        		umount -n $mntkey
-		fi
-		if [ $lvm = "true" ]; then dolvm; fi
-	else
-		error "device (${enc_root}) is not LUKS."
-		droptoshell
-	fi # end of LUKS device check
-fi
-
-if [ $rescueshell = "true" ]; then
-	touch /var/log/lastlog
-	touch /var/run/utmp
-	chmod 600 /etc/shadow
-	touch /etc/resolv.conf
-	einfo "Initiating /dev/pts (devtpts)."
-	[ -d /dev/pts ] || mkdir -p /dev/pts
-	if ! mount -t devpts /dev/pts /dev/pts 2>/dev/null; then
-		rm -fr /dev/pts
-	fi
-
-	# XXX: dropbear-ssh
-	if [ ${dodropbear} = "true" ]; then
-		if [ $dropbearip = "false" ]; then
-			einfo "Bring up DHCP..."
-			run udhcpc
-		else
-       			einfo "Try getting IPaddress (${dropbearip})."
-        		run ifconfig $nic $dropbearip up >/dev/null 2>&1
-		fi
-		getip=$(ip a | grep $nic | grep inet | sed 's/  //g' | cut -d' ' -f 2)
-		if [ -n ${getip} ]; then
-			einfo "NIC get IPaddress (${getip})."
-            		if [ -x /bin/dropbear ]; then
-				for f in /bin/dbclient /bin/dbscp; do
-					test -x $f && ln -sf $f /usr/bin
-				done
-                		run hostname mybox
-				
-			        # make banner
-                		[ ! -e /etc/dropbear/ ] && mkdir -p /etc/dropbear
-				cat > /etc/dropbear/banner <<EOF
-
-------------------------------------------------------------
-	better-iinitramfs v${ver}
-	kernel ${kernelver}
-
-------------------------------------------------------------
-
-EOF
-			        # make hostkey
-				[ ! -e /etc/dropbear/dropbear_dss_host_key ] && (
-					einfo "Generating DSS-Hostkey..."
-					dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
-				)
-				[ ! -e /etc/dropbear/dropbear_rsa_host_key ] && (
-                    			einfo "Generating RSA-Hostkey..."
-                    			dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
-                		)
-
-                		einfo "Starting dropbear"
-                		dropbear -b /etc/dropbear/banner -F 2>&1 | tee /var/run/dropbear.log > /dev/tty10 &
-            		fi # -x /bin/dropbear
-		fi
-	fi
-	
-	droptoshell
-
-	[ -e /var/run/dropbear.pid ] && kill "$(cat /var/run/dropbear.pid)"
-
-	if [ -d /dev/pts ]; then
-		einfo "Unmount /dev/pts"
-		umount /dev/pts
-	fi
-	pkill screen
-fi
-
-if [ $tuxonice = "true" ]; then
-	if [ ! -z $resume ]; then
-		if [ ! -f /sys/power/tuxonice/do_resume ]; then
-			ewarn "Your kernel do not support TuxOnIce.";
-		else
-			einfo "Sending do_resume signal to TuxOnIce."
-			run echo 1 > /sys/power/tuxonice/do_resume
-		fi
-	else
-		ewarn "resume= variable is empty, not cool, skipping tuxonice."
-	fi
-fi
-
-#Mount the root device
-mountparams="-o ro"
-
-if [ ! -z $rootfstype ]; then
-	mountparams="$mountparams -t $rootfstype"
-fi
-
-einfo "Mounting rootfs to /newroot."
-# Resolve $root now, after getting up lvm and dmcrypt (and lvm ;p).
-root="$(get_device $root)"
-if [ -z $root ]; then
-	eerror "\$root variable is empty. Wrong UUID/LABEL?"
-	droptoshell
-fi
-
-run mount $mountparams "${root}" /newroot
-
-#Unmount all other mounts so that the ram used by
-#the initramfs can be cleared after switch_root
-einfo "Umounting /sys and /proc."
+einfo "Unmounting /sys and /proc."
 run umount /sys /proc
 
-if [ $mdev_fallback = "false" ]; then
+if [ "$mdev_fallback" != "true" ]; then
 	einfo "Unmounting /dev."
 	run umount /dev
 fi
-
 
 #Switch to the new root and execute init
 if [[ -x "/newroot/${init}" ]] ; then
