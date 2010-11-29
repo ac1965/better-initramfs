@@ -92,6 +92,8 @@ initluks() {
 	run echo -e "#!/bin/sh\nexit 0" > /sbin/udevadm
 	run chmod 755 /sbin/udevadm
 
+	cryptsetup_options=""
+	mntkey="/mnt/key"
 	if [ -n "$enc_root_keydev" ] && [ -n "$enc_root_keyfile" ]; then
 		resolve_device enc_root_keydev
 		if [ -b $enc_root_keydev ]; then
@@ -193,9 +195,9 @@ initdropbear() {
 		run udhcpc
 	else
        		einfo "Try getting IPaddress (${dropbearip})."
-        	ifconfig $nic $dropbearip up >/dev/null 2>&1
+        	ifconfig eth0 $dropbearip up >/dev/null 2>&1
 	fi
-	getip=$(ip a | grep $nic | grep inet | sed 's/  //g' | cut -d' ' -f 2)
+	getip=$(ip a | grep eth0 | grep inet | sed 's/  //g' | cut -d' ' -f 2)
 	if [ -n ${getip} ]; then
 		einfo "NIC get IPaddress (${getip})."
             	if [ -x /bin/dropbear ]; then

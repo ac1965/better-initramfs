@@ -26,10 +26,6 @@ run dodir /dev /newroot /sbin /proc /sys /etc /usr/bin /var/log /var/run
 # Clear the screen
 clear
 
-# Default values.
-cryptsetup_options=""
-mntkey="/mnt/key"
-
 # Config.
 if [ -f /config ]; then . /config; fi
 
@@ -89,9 +85,6 @@ for i in $(cat /proc/cmdline); do
 		rescueshell)
 			rescueshell=true
 		;;
-        	nic\=*)
-            		nic=$(get_opt $i)
-        	;;
 		tuxonice)
 			tuxonice=true
 		;;
