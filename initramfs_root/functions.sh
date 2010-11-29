@@ -182,6 +182,9 @@ mountroot() {
 bootstrap_setups() {
 	cat > /etc/ld.so.conf <<EOF
 /lib
+/lib64
+/usr/lib
+/usr/lib64
 EOF
 	ldconfig
 	touch /var/log/lastlog
