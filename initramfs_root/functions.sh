@@ -228,4 +228,5 @@ EOF
                 	einfo "Starting dropbear"
                 	dropbear -b /etc/dropbear/banner -F 2>&1 | tee /var/run/dropbear.log > /dev/tty10 &
             	fi # -x /bin/dropbear
+	fi
 }
