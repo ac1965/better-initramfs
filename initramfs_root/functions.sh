@@ -193,7 +193,7 @@ initdropbear() {
 		run udhcpc
 	else
        		einfo "Try getting IPaddress (${dropbearip})."
-        	run ifconfig $nic $dropbearip up >/dev/null 2>&1
+        	ifconfig $nic $dropbearip up >/dev/null 2>&1
 	fi
 	getip=$(ip a | grep $nic | grep inet | sed 's/  //g' | cut -d' ' -f 2)
 	if [ -n ${getip} ]; then
@@ -228,5 +228,4 @@ EOF
                 	einfo "Starting dropbear"
                 	dropbear -b /etc/dropbear/banner -F 2>&1 | tee /var/run/dropbear.log > /dev/tty10 &
             	fi # -x /bin/dropbear
-	fi
 }
