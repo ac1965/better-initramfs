@@ -178,7 +178,7 @@ mountroot() {
 	run mount $mountparams "${root}" /newroot
 }
 
-bootstrap_dynamic_libs() {
+bootstrap_setups() {
 	cat > /etc/ld.so.conf <<EOF
 /lib
 EOF
@@ -190,12 +190,12 @@ EOF
 }
 
 initdropbear() {
-	if [ $dropbearip = "false" ]; then
+	if [ -n "$dropbearip" ]; then
+       		einfo "Try getting IPaddress (${dropbearip})."
+        	run ifconfig eth0 $dropbearip up >/dev/null 2>&1
+	else
 		einfo "Bring up DHCP..."
 		run udhcpc
-	else
-       		einfo "Try getting IPaddress (${dropbearip})."
-        	ifconfig eth0 $dropbearip up >/dev/null 2>&1
 	fi
 	getip=$(ip a | grep eth0 | grep inet | sed 's/  //g' | cut -d' ' -f 2)
 	if [ -n ${getip} ]; then
@@ -220,11 +220,11 @@ EOF
 			 # make hostkey
 			[ ! -e /etc/dropbear/dropbear_dss_host_key ] && (
 				einfo "Generating DSS-Hostkey..."
-				dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
+				dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key >/dev/null 2>&1
 			)
 			[ ! -e /etc/dropbear/dropbear_rsa_host_key ] && (
                     		einfo "Generating RSA-Hostkey..."
-                    		dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
+                    		dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key >/dev/null 2>&1
                 	)
 			
                 	einfo "Starting dropbear"

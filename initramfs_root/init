@@ -116,10 +116,13 @@ if [ -n "$rootdelay" ]; then
 	fi
 fi
 
-run bootstrap_dynamic_libs
 
 # prepare /dev
 mountdev
+
+# setup for console, via ssh
+run bootstrap_setups
+
 # mdadm hook.
 use softraid && initmdadm
 # lvm hook.
