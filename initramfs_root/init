@@ -124,7 +124,10 @@ fi
 mountdev
 
 # setup for console, via ssh
-run bootstrap_setups
+bootstrap_setups
+
+# loadable modules
+[ -d /lib/modules/${kernelver} ] && modprobe_group boot
 
 # mdadm hook.
 use softraid && initmdadm
