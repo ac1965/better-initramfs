@@ -9,10 +9,12 @@ ewarn() { echo -ne "\033[1;30m>\033[0;33m>\033[1;33m> \033[0m${@}\n" ;}
 eerror() { echo -ne "\033[1;30m>\033[0;31m>\033[1;31m> ${@}\033[0m\n" ;}
 
 droptoshell() {
-	einfo "Initiating /dev/pts (devtpts)."
-	[ -d /dev/pts ] || mkdir -p /dev/pts
-	if ! mount -t devpts /dev/pts /dev/pts 2>/dev/null; then
-		rm -fr /dev/pts
+	if [ ! -e /dev/pty0 ]; then # CONFIG_LEGACY_PTYS=n
+		einfo "Initiating /dev/pts (devtpts)."
+		[ -d /dev/pts ] || mkdir -p /dev/pts
+		if ! mount -t devpts /dev/pts /dev/pts 2>/dev/null; then # CONFIG_UNIX98_PTYS=n
+			rm -fr /dev/pts
+		fi
 	fi
 
 	initkeymap

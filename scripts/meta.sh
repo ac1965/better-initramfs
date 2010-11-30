@@ -56,7 +56,8 @@ etc() {
 
 lib() {
 	einfo 'Preparing library files...'
-        for l in `ls /lib/libnss_* /lib/libpam.* /lib/libpam_*`; do
+        #for l in `ls /lib/libnss_* /lib/libpam.* /lib/libpam_*`; do
+        for l in `ls /lib/libnss_*`; do
 	    $sudo $workdir/dolib $l
         done
         test -d $initramfs_root/lib/keymaps || mkdir -p $initramfs_root/lib/keymaps
