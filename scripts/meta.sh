@@ -6,6 +6,8 @@ workdir="$(readlink -f $(dirname $0))"
 . $workdir/core.sh || exit 1
 
 ver="$(cat $workdir/../VERSION)"
+arch="x86"
+kernelver="`uname -r`"
 
 einfo "better-initramfs v${ver} - home page: http://slashbeast.github.com/better-initramfs/"
 ewarn "Remember to check ChangeLog file after every update.\n"
@@ -64,9 +66,16 @@ lib() {
         test -f $workdir/defaults/keymaps.tar.gz && $sudo tar xf $workdir/defaults/keymaps.tar.gz -C $initramfs_root/lib/keymaps
 }
 
+modules() {
+	# FIXME:
+	einfo "Kernel loadble modules install..."
+	[ -d $initramfs_root/lib/modules ] || $sudo mkdir -p $initramfs_root/lib/modules
+	$sudo cp -pa /lib/modules/`uname -r` $initramfs_root/lib/modules
+}
+
 image() {
 	einfo 'Building image...'
-	$workdir/doimage.sh
+	$workdir/doimage.sh $arch $kernelver
 }
 
 clean() {
@@ -75,10 +84,10 @@ clean() {
 }
 
 case $1 in
-	bin|etc|image|clean)
+	bin|etc|image|clean|modules)
 		$1
 	;;
 	all)
-		bin && etc && lib && image
+		bin && etc && lib && modules && image
 	;;
 esac

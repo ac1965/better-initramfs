@@ -11,7 +11,7 @@
 . /functions.sh
 
 # Prepare dirs
-run dodir /dev /newroot /sbin /proc /sys /etc /usr/bin /var/log /var/run
+run dodir /dev /newroot /sbin /proc /sys /etc /usr/bin /tmp /var/log /var/run
 [ -d /lib ] && run ln -s /lib /lib64
 [ -d /usr/lib ] && run ln -s /usr/lib /usr/lib64
 
@@ -44,6 +44,7 @@ echo 0 > /proc/sys/kernel/printk
 
 einfo "Mounting /sys"
 run mount -t sysfs sysfs /sys
+[ -d /lib/modules/$kernelver ] && modprobe_hw
 
 # Process command line options
 for i in $(cat /proc/cmdline); do

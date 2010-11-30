@@ -309,3 +309,18 @@ modprobe_group() {
 		ewarn "File /etc/modules/$GROUP not found."
 	fi
 }
+
+# steel : http://www.gcd.org/blog/2007/09/129/
+modprobe_hw() {
+	tmp=/tmp/dev2mod
+	echo 'dev2mod(){ while read dev; do case $dev in' > $tmp
+	sort -r /lib/modules/$kernelver/modules.alias \
+		| sed -n 's/^alias  *\([^ ]*\)  *\(.*\)/\1)modprobe \2;;/p' >> $tmp
+	echo 'esac; done; }' >> $tmp
+	. $tmp
+	rm $tmp
+	unset tmp
+	cat /sys/bus/*/devices/*/modalias | dev2mod
+	modprobe pcmcia
+	cat /sys/bus/*/devices/*/modalias | dev2mod
+}

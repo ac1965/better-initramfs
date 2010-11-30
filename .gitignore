@@ -1,7 +1,8 @@
-initramfs.cpio.gz
+initramfs-*
 initramfs_root/bin/*
 initramfs_root/etc/*
 initramfs_root/lib/*
 initramfs_root/lib/*
 initramfs_root/etc/*
 initramfs_root/config
+!*.keep
