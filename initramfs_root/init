@@ -158,4 +158,5 @@ if [[ -x "/newroot/${init}" ]] ; then
 fi
 
 ewarn "Something goes wrong."
-droptoshell
+exec /bin/ash
+exec /bin/sh
