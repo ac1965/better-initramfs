@@ -127,6 +127,9 @@ mountdev
 # setup for console, via ssh
 bootstrap_setups
 
+# If real-root FS is module, load it.
+modules_scan "ext2 ext3 ext4 reiserfs jfs nfs xfs fuse squashfs aufs" quiet
+
 # mdadm hook.
 use softraid && initmdadm
 # lvm hook.

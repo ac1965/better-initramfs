@@ -305,6 +305,20 @@ modprobe_hw() {
 	rm $tmp
 	unset tmp
 	cat /sys/bus/*/devices/*/modalias | dev2mod
-	modprobe pcmcia
+	modules_scan pcmcia
 	cat /sys/bus/*/devices/*/modalias | dev2mod
+}
+
+modules_scan() {
+	[ -d "/etc/modules/${1}" ] || touch /etc/modules/${1}
+	[ -f "/etc/modules/${1}" ] && modules_list=$(cat /etc/modules/${1})
+	
+	for m in ${modules_list}
+	do
+		if find /lib/modules/$kernelver | grep /"${m}.ko" > /dev/null 2>&1; then
+			modprobe ${m}
+		else
+			[ x"${2}" = x"quiet" ] || ewarn ":: Skipping ${m}..."
+		fi
+	done
 }
