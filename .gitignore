@@ -2,7 +2,8 @@ initramfs-*
 initramfs_root/bin/*
 initramfs_root/etc/*
 initramfs_root/lib/*
-initramfs_root/lib/*
+initramfs_root/lib64/*
+initramfs_root/usr/*
 initramfs_root/etc/*
 initramfs_root/config
 !*.keep
