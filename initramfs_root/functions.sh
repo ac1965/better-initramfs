@@ -295,18 +295,23 @@ initkeymap() {
 }
 
 # steel : http://www.gcd.org/blog/2007/09/129/
-modprobe_hw() {
+modules_setup() {
 	tmp=/tmp/dev2mod
 	echo 'dev2mod(){ while read dev; do case $dev in' > $tmp
 	sort -r /lib/modules/$kernelver/modules.alias \
 		| sed -n 's/^alias  *\([^ ]*\)  *\(.*\)/\1)modprobe \2;;/p' >> $tmp
 	echo 'esac; done; }' >> $tmp
 	. $tmp
-	rm $tmp
+	#rm $tmp
 	unset tmp
 	cat /sys/bus/*/devices/*/modalias | dev2mod
-	modules_scan pcmcia
+	modules_scan pcmcia "QUIET"
 	cat /sys/bus/*/devices/*/modalias | dev2mod
+	# M="pata sata scsi usb firewire waitscan slowusb fs net evms lvm dmraid mdadm crypt"
+	M="fs net evms lvm dmraid mdadm crypt"
+	for m in $M; do
+		modules_scan ${m} "QUIET"
+	done
 }
 
 modules_scan() {
@@ -316,9 +321,10 @@ modules_scan() {
 	for m in ${modules_list}
 	do
 		if find /lib/modules/$kernelver | grep /"${m}.ko" > /dev/null 2>&1; then
+			einfo ":: Module loaded ${m}..."
 			modprobe ${m}
 		else
-			[ x"${2}" = x"quiet" ] || ewarn ":: Skipping ${m}..."
+			[ x"${2}" = x"QUIET" ] || ewarn ":: Skipping ${m}..."
 		fi
 	done
 }

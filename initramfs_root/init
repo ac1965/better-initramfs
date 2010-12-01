@@ -44,7 +44,7 @@ echo 0 > /proc/sys/kernel/printk
 
 einfo "Mounting /sys"
 run mount -t sysfs sysfs /sys
-[ -d /lib/modules/$kernelver ] && modprobe_hw
+[ -d /lib/modules/$kernelver ] && modules_setup
 
 # Process command line options
 for i in $(cat /proc/cmdline); do
@@ -126,9 +126,6 @@ mountdev
 
 # setup for console, via ssh
 bootstrap_setups
-
-# If real-root FS is module, load it.
-modules_scan "ext2 ext3 ext4 reiserfs jfs nfs xfs fuse squashfs aufs" quiet
 
 # mdadm hook.
 use softraid && initmdadm
