@@ -69,8 +69,47 @@ lib() {
 modules() {
 	# FIXME:
 	einfo "Kernel loadble modules install..."
+	release=`uname -r`
+	while true; do
+		echo -n "install modules : $release [y|n|q] "
+		read yesorn
+		case "$yesorn" in
+		y) 
+			if [ -d /lib/modules/$release ]; then
+				modules_install $release
+				break;
+			else
+				ewarn "Not exist /lib/modules/$release"
+				[ -d /lib/modules ] && ewarn "Please select from the following releases.\n`ls /lib/modules`\n"
+			fi
+		;;
+		n)	
+			echo -n "Please type kernel release: "
+			read input_release
+			case "$input_relase" in
+			*)	
+				if [ -d /lib/modules/$input_release ]; then
+					release=$input_release
+				else
+					ewarn "Not exist /lib/modules/$input_release"
+					[ -d /lib/modules ] && ewarn "Please select from the following releases.\n`ls /lib/modules`\n"
+				fi
+				;;
+			esac
+		;;
+		q)	
+			ewarn "kernel modules does not installed."
+			break
+		;;
+		*)	;;
+		esac
+	done
+}
+
+modules_install() {
+	local release=$1
 	[ -d $initramfs_root/lib/modules ] || $sudo mkdir -p $initramfs_root/lib/modules
-	$sudo cp -pa /lib/modules/`uname -r` $initramfs_root/lib/modules
+	$sudo cp -pa /lib/modules/$release $initramfs_root/lib/modules
 }
 
 image() {
