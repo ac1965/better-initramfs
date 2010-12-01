@@ -84,6 +84,7 @@ while true; do
 		fi
 	;;
 	n)	
+		[ -d /lib/modules ] && ewarn "Please select from the following releases.\n`ls /lib/modules`\n"
 		echo -n "Please type kernel release: "
 		read input_release
 		case "$input_relase" in
