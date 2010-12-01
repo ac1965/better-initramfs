@@ -294,19 +294,6 @@ initkeymap() {
 	fi
 }
 
-modprobe_group() {
-	local GROUP="$1"
-	local MOD
-	einfo "Insert $GROUP modules"
-	if [ -f /etc/modules/$GROUP ]; then
-		for MOD in $(cat "/etc/modules/$GROUP"); do
-			modprobe -q $MOD
-		done
-	else
-		ewarn "File /etc/modules/$GROUP not found."
-	fi
-}
-
 # steel : http://www.gcd.org/blog/2007/09/129/
 modprobe_hw() {
 	tmp=/tmp/dev2mod
