@@ -135,12 +135,14 @@ initluks() {
 
 initlvm() {
 	einfo "Scaning all disks for volume groups."
+	modules_scan lvm "QUIET"
 	run lvm vgscan
 	run lvm vgchange -a y
 }
 
 initmdadm() {
 	einfo "Scaning for software raid arrays."
+	modules_scan mdadm "QUIET"
 	mdadm --assemble --scan
 	mdadm --auto-detect
 }
@@ -307,8 +309,7 @@ modules_setup() {
 	cat /sys/bus/*/devices/*/modalias | dev2mod
 	modules_scan pcmcia "QUIET"
 	cat /sys/bus/*/devices/*/modalias | dev2mod
-	# M="pata sata scsi usb firewire waitscan slowusb fs net evms lvm dmraid mdadm crypt"
-	M="fs net evms lvm dmraid mdadm crypt"
+	M="lib crypt pata sata scsi usb firewire waitscan slowusb fs net" # evms lvm dmraid mdadm"
 	for m in $M; do
 		modules_scan ${m} "QUIET"
 	done
