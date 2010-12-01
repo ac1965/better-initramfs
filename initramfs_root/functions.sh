@@ -18,11 +18,8 @@ droptoshell() {
 	fi
 
 	initkeymap
-	if [ $rescueshell = 'false' ]; then
-		ewarn "Dropping to rescueshell because of above error."
-	else
-		use dodropbear && initdropbear
-	fi
+	use dodropbear && initdropbear
+
 	ewarn "Rescue Shell (busybox's /bin/sh)"
 	ewarn "To reboot, press 'control-alt-delete'."
 	ewarn "If you wish continue booting process, just exit from this shell."
