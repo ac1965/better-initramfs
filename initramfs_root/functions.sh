@@ -135,14 +135,12 @@ initluks() {
 
 initlvm() {
 	einfo "Scaning all disks for volume groups."
-	modules_scan lvm "QUIET"
 	run lvm vgscan
 	run lvm vgchange -a y
 }
 
 initmdadm() {
 	einfo "Scaning for software raid arrays."
-	modules_scan mdadm "QUIET"
 	mdadm --assemble --scan
 	mdadm --auto-detect
 }
