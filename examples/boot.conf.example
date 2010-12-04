@@ -13,8 +13,12 @@ boot {
 "Funtoo Linux" {
 	kernel bzImage[-v]
 	initrd initramfs.cpio.gz
-	params  = quiet rootfstype=ext4
-	params += luks enc_root=/dev/sda2
+	params += quiet rootfstype=ext4
+	params += luks
+	params += enc_root=UUID=18bc1b75-8169-4cc3-843d-5e715afe3a7e
+	params += enc_root_keydev=UUID=4ad366d8-2039-4ee8-9ded-d700540f2e14
+	params += enc_root_key=/keyfile
 	params += lvm root=/dev/mapper/vg-rootfs
+	params += dodropbear ip=192.168.218.123
+	params += keymap=jp
 }
-
