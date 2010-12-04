@@ -67,44 +67,16 @@ test -f $workdir/defaults/keymaps.tar.gz && $sudo tar xf $workdir/defaults/keyma
 }
 
 modules() {
-# FIXME:
-einfo "Kernel loadble modules install..."
-release=`uname -r`
-while true; do
-	echo -n "install modules : $release [y|n|q] "
-	read yesorn
-	case "$yesorn" in
-	y) 
-		if [ -d /lib/modules/$release ]; then
-			modules_install $release
-			break;
-		else
-			ewarn "Not exist /lib/modules/$release"
-			[ -d /lib/modules ] && ewarn "Please select from the following releases.\n`ls /lib/modules`\n"
-		fi
-	;;
-	n)	
-		[ -d /lib/modules ] && ewarn "Please select from the following releases.\n`ls /lib/modules`\n"
-		echo -n "Please type kernel release: "
-		read input_release
-		case "$input_relase" in
-		*)	
-			if [ -d /lib/modules/$input_release ]; then
-				release=$input_release
-			else
-				ewarn "Not exist /lib/modules/$input_release"
-				[ -d /lib/modules ] && ewarn "Please select from the following releases.\n`ls /lib/modules`\n"
-			fi
-			;;
-		esac
-	;;
-	q)	
-		ewarn "kernel modules does not installed."
-		break
-	;;
-	*)	;;
-	esac
-done
+    req_modules=$1
+    if [ -z $req_modules ]; then
+        test -f /usr/src/linux/include/config/kernel.release && \  
+        modules=`cat /usr/src/linux/include/config/kernel.release`
+    else
+        modules=$req_modules
+    fi
+    if [ -n $modules ]; then
+        [ -d /lib/modules/$modules ] && cp -a /lib/modules/$modules /lib/modules
+    fi
 }
 
 modules_install() {
