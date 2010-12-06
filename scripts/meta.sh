@@ -69,13 +69,12 @@ test -f $workdir/defaults/keymaps.tar.gz && $sudo tar xf $workdir/defaults/keyma
 modules() {
     req_modules=$1
     if [ -z $req_modules ]; then
-        test -f /usr/src/linux/include/config/kernel.release && \  
-        modules=`cat /usr/src/linux/include/config/kernel.release`
+        [ -f /usr/src/linux/include/config/kernel.release ] && modules=$(cat /usr/src/linux/include/config/kernel.release)
     else
         modules=$req_modules
     fi
     if [ -n $modules ]; then
-        [ -d /lib/modules/$modules ] && cp -a /lib/modules/$modules /lib/modules
+        [ -d /lib/modules/$modules ] && cp -a /lib/modules/$modules $initramfs_root/lib/modules
     fi
 }
 
