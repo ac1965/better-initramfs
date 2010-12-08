@@ -305,7 +305,7 @@ modules_setup() {
 		| sed -n 's/^alias  *\([^ ]*\)  *\(.*\)/\1)modprobe \2;;/p' >> $tmp
 	echo 'esac; done; }' >> $tmp
 	. $tmp
-	#rm $tmp
+	rm $tmp
 	unset tmp
 	cat /sys/bus/*/devices/*/modalias | dev2mod
 	modules_scan pcmcia "QUIET"

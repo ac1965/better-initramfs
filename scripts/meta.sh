@@ -54,6 +54,12 @@ $sudo chown root:root ${initramfs_root}/etc/passwd
 $sudo chown root:root ${initramfs_root}/etc/shadow
 $sudo chmod 0600 ${initramfs_root}/etc/shadow
 test -f $workdir/defaults/terminfo.tar.gz && $sudo tar xf $workdir/defaults/terminfo.tar.gz -C $initramfs_root
+test -d ${initramfs_root}/etc/modules || mkdir -p ${initramfs_root}/etc/modules
+source $workdir/defaults/arch/$arch/modules.conf
+for group_modules in ${!MODULES_*}; do
+    group="$(echo $group_modules | cut -d_ -f2 | tr "[:upper:]" "[:lower:]")"
+    echo "${!group_modules}" > ${initramfs_root}/etc/modules/$group
+done
 }
 
 lib() {
