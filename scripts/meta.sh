@@ -94,7 +94,7 @@ image() {
 
 clean() {
 	einfo 'Cleanup image...'
-	$sudo rm -fr ${initramfs_root}/bin ${initramfs_root}/lib ${initramfs_root}/etc initramfs.cpio.gz
+	$sudo rm -fr ${initramfs_root}/bin ${initramfs_root}/lib ${initramfs_root}/etc ${initramfs_root}/usr initramfs-*-`uname -r`
 }
 
 case $1 in
