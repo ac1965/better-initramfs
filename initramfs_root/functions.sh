@@ -9,7 +9,7 @@ ewarn() { echo -ne "\033[1;30m>\033[0;33m>\033[1;33m> \033[0m${@}\n" ;}
 eerror() { echo -ne "\033[1;30m>\033[0;31m>\033[1;31m> ${@}\033[0m\n" ;}
 
 droptoshell() {
-	if [ ! -e /dev/pty0 ]; then # CONFIG_LEGACY_PTYS=n
+	if [ ! -c /dev/ptmx ]; then # CONFIG_LEGACY_PTYS=n
 		einfo "Initiating /dev/pts (devtpts)."
 		[ -d /dev/pts ] || mkdir -p /dev/pts
 		if ! mount -t devpts /dev/pts /dev/pts 2>/dev/null; then # CONFIG_UNIX98_PTYS=n
@@ -45,12 +45,15 @@ resolve_device() {
 
 	case $device in
 		LABEL\=*|UUID\=*)
-			eval $1=$(findfs $device)
+			retval=1
+			[ $retval -ne 0 ] && [ -n "$(type -P findfs)" ] && device=$(findfs $device) && retval=$? && eval $1=$device 
+			[ $retval -ne 0 ] && [ -n "$(type -P busybox)" ] && device=$(busybox findfs $device) && retval=$? && eval $1=$device
+			[ $retval -ne 0 ] && [ -n "$(type -P blkid)" ] && device=$(blkid -t $device | cut -d ":" -f 1) && retval=$? && eval $1=$device
 		;;
 	esac
 	
 	if [ -z "$(eval echo \$$1)" ]; then
-		eerror "Wrong UUID/LABEL."
+		eerror "Wrong UUID/LABEL. ($device)"
 		droptoshell
 	fi
 }
@@ -179,13 +182,13 @@ mountroot() {
 }
 
 bootstrap_setups() {
-	cat > /etc/ld.so.conf <<EOF
-/lib
-/lib64
-/usr/lib
-/usr/lib64
-EOF
-	ldconfig
+#	cat > /etc/ld.so.conf <<EOF
+#/lib
+#/lib64
+#/usr/lib
+#/usr/lib64
+#EOF
+#	ldconfig
 	touch /var/log/lastlog
 	touch /var/run/utmp
 	chmod 600 /etc/shadow

@@ -7,6 +7,8 @@ cpiof="initramfs-better-$arch-$kernelver"
 
 . $workdir/core.sh || exit 1
 
+$sudo cp -ar /etc/ld.so.conf* "$initramfs_root"/etc
+$sudo ldconfig -r "$initramfs_root"
 
 ( cd $initramfs_root && find . | $sudo cpio --quiet -H newc -o | gzip -9 > ../$cpiof)
 

@@ -68,30 +68,16 @@ test -f $workdir/defaults/keymaps.tar.gz && $sudo tar xf $workdir/defaults/keyma
 
 modules() {
     req_modules=$1
+    [ -d ${initramfs_root}/lib/modules ] || $sudo mkdir -p ${initramfs_root}/lib/modules
     if [ -z $req_modules ]; then
         [ -f /usr/src/linux/include/config/kernel.release ] && modules=$(cat /usr/src/linux/include/config/kernel.release)
     else
         modules=$req_modules
     fi
     if [ -n $modules ]; then
-        [ -d /lib/modules/$modules ] && cp -a /lib/modules/$modules $initramfs_root/lib/modules
+        einfo "Install modules($modules) into initram."
+        [ -d /lib/modules/$modules ] && $sudo cp -a /lib/modules/$modules $initramfs_root/lib/modules
     fi
-}
-
-modules_install() {
-	local release=$1
-	local config="${workdir}/defaults/arch/${arch}/modules.conf"
-
-	[ -f $config ] || die "Could not read $config"
-	source $config
-	[ -d $initramfs_root/lib/modules ] || $sudo mkdir -p $initramfs_root/lib/modules
-        $sudo cp -pax /lib/modules/$release $initramfs_root/lib/modules
-        [ -d $initramfs_root/etc/modules ] || mkdir -p $initramfs_root/etc/modules
-        for group_modules in ${!MODULES_*}; do
-            group="$(echo $group_modules | cut -d_ -f2 | tr "[:upper:]" "[:lower:]")"
-            echo ${!group_modules} > $initramfs_root/etc/modules/${group}
-        done
-	$sudo chown -R root:root $initramfs_root/etc/modules
 }
 
 image() {

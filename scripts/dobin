@@ -21,16 +21,21 @@ addbin() {
 		$sudo cp -p $source $target # static link file
 	else
 		$sudo cp -p $source $target # dynamic link file, copy dynamic library
-		dynamic_libs=$(ldd $source | awk '{if (NF==4) print $3; if (NF==2) print $1}')
+		dynamic_libs=$(ldd $source | \
+			awk '{if (NF==4) print $3; if (NF==2) print $1}')
 		for lib in $dynamic_libs; do
-			test -d ${initramfs_root}/lib || mkdir -p ${initramfs_root}/lib
-			test -e ${initramfs_root}/lib/$(basename $lib) || (
+			libdir=$(dirname "${initramfs_root}${lib}")
+			[ -d $libdir ] || mkdir -p $libdir
+			[ -e "${initramfs_root}/${lib}" ] || (
 				einfo "Adding dynamic library: $lib"
-				test -h $lib && (
-					$sudo cp -p $(readlink -f $lib) ${initramfs_root}/lib;
-					$sudo ln -s $(readlink $lib) ${initramfs_root}/lib/$(basename $lib)
-				) || $sudo cp -p $lib ${initramfs_root}/lib
+				if [ -h $lib ]; then
+					cp -p $(readlink -f $lib) $libdir
+					ln -s $(readlink $lib) ${libdir}/$(basename $lib)
+				else
+					cp -p $lib $libdir
+				fi
 			)
+			set +x
 		done
 	fi
 }
