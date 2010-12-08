@@ -59,6 +59,7 @@ source $workdir/defaults/arch/$arch/modules.conf
 for group_modules in ${!MODULES_*}; do
     group="$(echo $group_modules | cut -d_ -f2 | tr "[:upper:]" "[:lower:]")"
     echo "${!group_modules}" > ${initramfs_root}/etc/modules/$group
+    einfo "appending group: $group"
 done
 }
 
